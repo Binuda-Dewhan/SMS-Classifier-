@@ -42,7 +42,7 @@ def transform_text_column(df):
 
             return " ".join(y)
 
-        df['text'] = df['text'].apply(transform_text)
+        df['transformed_text'] = df['text'].apply(transform_text)
         return df
 
 
