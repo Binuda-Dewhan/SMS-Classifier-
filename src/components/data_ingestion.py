@@ -7,7 +7,7 @@ from src.components.data_transformation import DataTransformation
 from src.components.data_transformation import DataTransformationConfig
 from dataclasses import dataclass
 
-# from src.components.model_trainer import ModelTrainer
+from src.components.model_trainer import ModelTrainer
 
 @dataclass
 class DataIngestionConfig:
@@ -47,5 +47,7 @@ if __name__ == "__main__":
     logging.info("Data transformation completed successfully")
 
     # Step 3: (Optional) Pass to ModelTrainer
-    # model_trainer = ModelTrainer()
-    # model_trainer.initiate_model_training(X_train, X_test, y_train, y_test)
+    model_trainer = ModelTrainer()
+    results = model_trainer.initiate_model_training(X_train, X_test, y_train, y_test, tfidf)
+
+    print("Training Results:", results)
