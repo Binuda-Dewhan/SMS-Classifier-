@@ -8,6 +8,10 @@ from src.exception import CustomException
 from src.logger import logging
 import os
 
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.model_selection import train_test_split
+
+
 from sklearn.preprocessing import LabelEncoder, FunctionTransformer
 from sklearn.base import BaseEstimator, TransformerMixin
 import os
@@ -44,6 +48,29 @@ def transform_text_column(df):
 
         df['transformed_text'] = df['text'].apply(transform_text)
         return df
+
+def prepare_features_and_split(df, max_features=3000, test_size=0.2, random_state=2):
+    """
+    Vectorize text with TF-IDF and split into train/test sets.
+    Saves df_transformed.csv automatically.
+    """
+    # Vectorize text
+    tfidf = TfidfVectorizer(max_features=max_features)
+    X = tfidf.fit_transform(df['transformed_text']).toarray()
+
+    # Target variable
+    y = df['target'].values
+
+    # Train-test split
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=test_size, random_state=random_state
+    )
+
+    # Save transformed dataframe
+    df.to_csv("artifacts/df_transformed.csv", index=False)
+
+    return X_train, X_test, y_train, y_test, tfidf
+
 
 
 @dataclass
@@ -128,7 +155,10 @@ class DataTransformation:
 
             logging.info(f"Transformed data saved to {self.data_transformation_config.transformed_data_path}")
 
-            return df_transformed, preprocessor_obj
+            # ✅ Apply TF-IDF + train/test split
+            X_train, X_test, y_train, y_test, tfidf = prepare_features_and_split(df_transformed)
+
+            return X_train, X_test, y_train, y_test, preprocessor_obj, tfidf
 
         except Exception as e:
             raise CustomException(e, sys)
