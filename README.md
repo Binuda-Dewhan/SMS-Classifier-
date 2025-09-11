@@ -1,5 +1,9 @@
 # 📩 SMS Spam Classifier  
 
+🔗 **[Live Demo on Streamlit](https://spamsms-classifier.streamlit.app/)**  
+
+A Machine Learning project to classify SMS messages as **Spam** or **Not Spam** using NLP and a Multinomial Naive Bayes model.
+
 This project is a **Machine Learning based SMS Spam Classifier** that can automatically detect whether a given SMS is **Spam** or **Ham (Not Spam)**.  
 It is built using **Natural Language Processing (NLP)** techniques and deployed with **Streamlit** for an interactive user experience.  
 
