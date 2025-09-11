@@ -2,6 +2,8 @@ import streamlit as st
 import pickle
 import nltk
 import string
+import pandas as pd
+import matplotlib.pyplot as plt
 from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
 
@@ -11,12 +13,28 @@ vectorizer = pickle.load(open("artifacts/vectorizer.pkl", "rb"))
 
 ps = PorterStemmer()
 
-# Text preprocessing function
-def transform_text(text):
-    text = text.lower()  # convert text to lowercase
-    text = nltk.word_tokenize(text)  # tokenize the text
+# ----------------- Styling -----------------
+def add_bg_from_url():
+    st.markdown(
+        f"""
+        <style>
+        .stApp {{
+            background-image: url("https://images.unsplash.com/photo-1581090700227-4c4dcbd6d1e0");
+            background-attachment: fixed;
+            background-size: cover;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
 
-    # remove special characters
+add_bg_from_url()
+
+# ----------------- Preprocess Function -----------------
+def transform_text(text):
+    text = text.lower()
+    text = nltk.word_tokenize(text)
+
     y = []
     for i in text:
         if i.isalnum():
@@ -25,7 +43,6 @@ def transform_text(text):
     text = y[:]
     y.clear()
 
-    # remove stopwords and punctuation
     for i in text:
         if i not in stopwords.words('english') and i not in string.punctuation:
             y.append(i)
@@ -33,36 +50,76 @@ def transform_text(text):
     text = y[:]
     y.clear()
 
-    # stemming
     for i in text:
         y.append(ps.stem(i))
 
     return " ".join(y)
 
-
-# Streamlit UI
+# ----------------- Main App -----------------
 st.title("📩 SMS Spam Classifier")
+st.markdown("### Detect spam messages with Machine Learning")
 
-st.write("Enter an SMS below to check if it's Spam or Not Spam.")
+# Project description
+st.markdown(
+    """
+    **Project Overview**  
+    This SMS Spam Classifier is built using **Natural Language Processing (NLP)** and a 
+    **Multinomial Naive Bayes model**.  
 
-# Input from user
-input_sms = st.text_area("Enter SMS message here:")
+    - **Purpose**: To automatically detect spam SMS messages and protect users from scams.  
+    - **Dataset**: The model was trained on the popular **SMS Spam Collection dataset**.  
+    - **Pipeline**:  
+        1. Preprocessing (lowercasing, tokenization, stopword removal, stemming)  
+        2. Feature extraction using **TF-IDF Vectorizer**  
+        3. Classification using **Multinomial Naive Bayes**  
 
-if st.button('Predict'):
+    ---
+    """
+)
+
+# Input Section
+input_sms = st.text_area("✉️ Enter SMS message here:")
+
+if st.button('🔍 Predict'):
     if input_sms.strip() == "":
         st.warning("⚠️ Please enter a message to classify.")
     else:
-        # 1. Preprocess
         transformed_sms = transform_text(input_sms)
-
-        # 2. Vectorize
         vector_input = vectorizer.transform([transformed_sms])
-
-        # 3. Predict
         result = model.predict(vector_input)[0]
 
-        # 4. Show Result
         if result == 1:
             st.error("🚨 This message is **Spam**!")
         else:
             st.success("✅ This message is **Not Spam**.")
+
+# ----------------- Dataset Section -----------------
+st.markdown("## 📊 Dataset Preview & Visualization")
+
+try:
+    df = pd.read_csv("notebook/data/spam.csv", encoding="ISO-8859-1")[["v1", "v2"]]
+    df = df.rename(columns={"v1": "label", "v2": "message"})
+
+    st.write("### Sample Data")
+    st.dataframe(df.sample(10))  # show random 10 rows
+
+    # Label distribution
+    st.write("### Spam vs Ham Distribution")
+    label_counts = df["label"].value_counts()
+
+    fig, ax = plt.subplots()
+    ax.pie(label_counts, labels=label_counts.index, autopct="%1.1f%%", startangle=90)
+    ax.axis("equal")
+    st.pyplot(fig)
+
+except FileNotFoundError:
+    st.warning("⚠️ Dataset file not found. Please place it in `notebook/data/spam.csv`.")
+
+# ----------------- Footer -----------------
+st.markdown(
+    """
+    ---
+    💡 *Developed by Binuda Dewhan*  
+    🚀 Deployed using **Streamlit**  
+    """
+)
